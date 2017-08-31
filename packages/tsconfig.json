@@ -53,6 +53,9 @@
             ],
             "@theia/go/lib/*": [
                 "go/src/*"
+            ],
+            "@theia/markers/lib/*": [
+                "markers/src/*"
             ]
         }
     },
