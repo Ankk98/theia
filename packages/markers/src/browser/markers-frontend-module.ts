@@ -11,22 +11,51 @@ import { MarkersContribution } from './markers-contribution';
 import { MarkersManager } from './markers-manager';
 import { CommandContribution, MenuContribution, KeybindingContribution } from "@theia/core/lib/common";
 import URI from "@theia/core/lib/common/uri";
+import { ProblemMarker } from './problem-marker';
 
 export default new ContainerModule(bind => {
     bind(MarkersManager).toSelf().inSingletonScope().onActivation((ctx, manager) => {
         const testCollection = manager.createCollection('test');
 
+        const testMarker1: ProblemMarker = {
+            kind: 'problem',
+            uri: new URI('/the/path/to/problem.ts'),
+            diagnostic: {
+                message: 'this is a dangerous problem',
+                range: {
+                    start: {
+                        line: 1,
+                        character: 2
+                    },
+                    end: {
+                        line: 4,
+                        character: 16
+                    }
+                }
+            },
+            owner: testCollection.owner
+        };
+        const testMarker2: ProblemMarker = {
+            kind: 'problem',
+            uri: new URI('/the/path/to/another/problem.ts'),
+            diagnostic: {
+                message: 'this is also a dangerous problem',
+                range: {
+                    start: {
+                        line: 4,
+                        character: 23
+                    },
+                    end: {
+                        line: 4,
+                        character: 16
+                    }
+                }
+            },
+            owner: testCollection.owner
+        };
+
         testCollection.setMarkers([
-            {
-                kind: 'problem',
-                owner: testCollection.owner,
-                uri: new URI('/path/to/hell.ts')
-            },
-            {
-                kind: 'problem',
-                owner: testCollection.owner,
-                uri: new URI('/path/to/heaven.ts')
-            },
+            testMarker1, testMarker2
         ]);
 
         return manager;
