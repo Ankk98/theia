@@ -26,7 +26,7 @@ export namespace MarkersCommands {
     export const OPEN: Command = {
         id: 'markers:open',
         label: 'Markers'
-    }
+    };
 }
 
 @injectable()

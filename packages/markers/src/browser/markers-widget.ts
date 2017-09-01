@@ -6,75 +6,33 @@
 */
 
 import { injectable, inject } from 'inversify';
-import { DataGrid, JSONModel, TextRenderer } from '@phosphor/datagrid';
 import { MarkersManager } from './markers-manager';
-import { ProblemMarker, ProblemMarkerScheme } from './problem-marker';
+import { MarkerFileNode } from './markers-tree';
+import { TreeWidget, TreeProps, TreeModel, ContextMenuRenderer, ITreeNode, NodeProps } from "@theia/core/lib/browser";
+import { h } from "@phosphor/virtualdom/lib";
 
 @injectable()
-export class MarkersWidget extends DataGrid {
+export class MarkersWidget extends TreeWidget {
 
-    constructor( @inject(MarkersManager) protected readonly markerManager: MarkersManager) {
-        super({
-            style: {
-                headerBackgroundColor: '#2E2E2E',
-                gridLineColor: '#2E2E2E'
-            }
-        });
+    constructor(
+        @inject(MarkersManager) protected readonly markerManager: MarkersManager,
+        @inject(TreeProps) readonly treeProps: TreeProps,
+        @inject(TreeModel) readonly markerTreeModel: TreeModel,
+        @inject(ContextMenuRenderer) readonly contextMenuRenderer: ContextMenuRenderer
+    ) {
+        super(treeProps, markerTreeModel, contextMenuRenderer);
 
-        this.model = new JSONModel({
-            'data': this.getData(),
-            'schema': {
-                fields: [
-                    {
-                        name: 'filename',
-                        title: 'Filename',
-                        type: 'string'
-                    },
-                    {
-                        name: 'path',
-                        title: 'Path',
-                        type: 'string'
-                    },
-                    {
-                        name: 'message',
-                        title: 'Message',
-                        type: 'string'
-                    },
-                    {
-                        name: 'position',
-                        title: 'Position',
-                        type: 'string'
-                    },
-
-                ]
-            }
-        });
-
-        this.defaultRenderer = new TextRenderer({
-            textColor: '#D4D4D4',
-            font: '14px sans-serif'
-        });
-
-        this.id = 'markerWidget';
+        this.id = 'markers';
         this.title.label = 'Markers';
         this.title.closable = true;
         this.title.iconClass = ' fa fa-table';
         this.addClass('markers-container');
     }
 
-    protected getData(): ProblemMarkerScheme[] {
-        const data: ProblemMarkerScheme[] = [];
-
-        this.markerManager.forEachByKind('problem', (marker: ProblemMarker) => {
-            data.push({
-                filename: marker.uri.displayName,
-                path: marker.uri.path.dir.toString(),
-                message: marker.diagnostic.message,
-                position: marker.diagnostic.range.start.line + ", " + marker.diagnostic.range.start.character
-            });
-        });
-
-        return data;
+    protected decorateCaption(node: ITreeNode, caption: h.Child, props: NodeProps): h.Child {
+        if (MarkerFileNode.is(node)) {
+            return super.decorateExpandableCaption(node, h.div({}, 'FILE: ' + caption), props);
+        }
+        return h.div({}, caption);
     }
-
 }

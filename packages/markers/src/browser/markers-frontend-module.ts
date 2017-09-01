@@ -9,14 +9,14 @@ import { ContainerModule } from "inversify";
 import { MarkersWidget } from './markers-widget';
 import { MarkersContribution } from './markers-contribution';
 import { MarkersManager } from './markers-manager';
+import { createMarkerWidget } from './markers-container';
+import { ProblemMarker } from './problem-marker';
 import { CommandContribution, MenuContribution, KeybindingContribution } from "@theia/core/lib/common";
 import URI from "@theia/core/lib/common/uri";
-import { ProblemMarker } from './problem-marker';
 
 export default new ContainerModule(bind => {
     bind(MarkersManager).toSelf().inSingletonScope().onActivation((ctx, manager) => {
         const testCollection = manager.createCollection('test');
-
         const testMarker1: ProblemMarker = {
             kind: 'problem',
             uri: new URI('/the/path/to/problem.ts'),
@@ -28,7 +28,7 @@ export default new ContainerModule(bind => {
                         character: 2
                     },
                     end: {
-                        line: 4,
+                        line: 1,
                         character: 16
                     }
                 }
@@ -37,7 +37,7 @@ export default new ContainerModule(bind => {
         };
         const testMarker2: ProblemMarker = {
             kind: 'problem',
-            uri: new URI('/the/path/to/another/problem.ts'),
+            uri: new URI('/the/path/to/problem.ts'),
             diagnostic: {
                 message: 'this is also a dangerous problem',
                 range: {
@@ -47,25 +47,45 @@ export default new ContainerModule(bind => {
                     },
                     end: {
                         line: 4,
-                        character: 16
+                        character: 26
+                    }
+                }
+            },
+            owner: testCollection.owner
+        };
+        const testMarker3: ProblemMarker = {
+            kind: 'problem',
+            uri: new URI('/the/path/to/anotherproblem.ts'),
+            diagnostic: {
+                message: 'serious! very, very serious!',
+                range: {
+                    start: {
+                        line: 13,
+                        character: 7
+                    },
+                    end: {
+                        line: 23,
+                        character: 3
                     }
                 }
             },
             owner: testCollection.owner
         };
 
+
         testCollection.setMarkers([
-            testMarker1, testMarker2
+            testMarker1, testMarker2, testMarker3
         ]);
 
         return manager;
     });
-
+    bind(MarkersWidget).toDynamicValue(ctx =>
+        createMarkerWidget(ctx.container)
+    ).inSingletonScope();
     bind(MarkersContribution).toSelf().inSingletonScope();
     for (const identifier of [CommandContribution, MenuContribution, KeybindingContribution]) {
         bind(identifier).toDynamicValue(ctx =>
             ctx.container.get(MarkersContribution)
         ).inSingletonScope();
     }
-    bind(MarkersWidget).toSelf().inSingletonScope();
 });

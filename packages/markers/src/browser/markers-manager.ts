@@ -75,9 +75,28 @@ export class MarkersManager {
         });
     }
 
+    getURIsByKind(kind: string): URI[] {
+        const uris: URI[] = [];
+        this.forEachByKind(kind, (marker: Marker) => {
+            if (!uris.find(uri => uri.toString() === marker.uri.toString())) {
+                uris.push(marker.uri);
+            }
+        });
+        return uris;
+    }
+
+    getMarkersByUriAndKind(uri: URI, kind: string): Marker[] {
+        const markers: Marker[] = [];
+        this.forEachByKind(kind, marker => {
+            if (uri.toString() === marker.uri.toString()) {
+                markers.push(marker);
+            }
+        });
+        return markers;
+    }
+
     setMarkersByOwner(owner: string, markers: Marker[]): void {
         this.markers.set(owner, markers);
         this.fireOnDidChangeMarkers();
     }
-
 }
