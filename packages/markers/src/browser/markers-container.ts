@@ -6,10 +6,8 @@
 */
 
 import { interfaces, Container } from "inversify";
-// import { MarkersTreeModel, MarkersTreeServices } from './markers-tree-model';
 import { MarkersTree } from './markers-tree';
 import { MarkersWidget } from './markers-widget';
-// import { createTreeContainer, Tree, ITree, TreeServices, TreeModel, ITreeModel, TreeWidget } from "@theia/core/lib/browser";
 import { createTreeContainer, Tree, ITree, TreeWidget } from "@theia/core/lib/browser";
 
 export function createMarkerContainer(parent: interfaces.Container): Container {
@@ -18,13 +16,6 @@ export function createMarkerContainer(parent: interfaces.Container): Container {
     child.unbind(Tree);
     child.bind(MarkersTree).toSelf();
     child.rebind(ITree).toDynamicValue(ctx => ctx.container.get(MarkersTree));
-
-    // child.unbind(TreeServices);
-    // child.bind(MarkersTreeServices).toSelf();
-
-    // child.unbind(TreeModel);
-    // child.bind(MarkersTreeModel).toSelf();
-    // child.rebind(ITreeModel).toDynamicValue(ctx => ctx.container.get(MarkersTreeModel));
 
     child.unbind(TreeWidget);
     child.bind(MarkersWidget).toSelf();

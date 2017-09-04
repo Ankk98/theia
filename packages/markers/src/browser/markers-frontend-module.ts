@@ -14,6 +14,8 @@ import { ProblemMarker } from './problem-marker';
 import { CommandContribution, MenuContribution, KeybindingContribution } from "@theia/core/lib/common";
 import URI from "@theia/core/lib/common/uri";
 
+import '../../src/browser/style/index.css';
+
 export default new ContainerModule(bind => {
     bind(MarkersManager).toSelf().inSingletonScope().onActivation((ctx, manager) => {
         const testCollection = manager.createCollection('test');
@@ -31,7 +33,8 @@ export default new ContainerModule(bind => {
                         line: 1,
                         character: 16
                     }
-                }
+                },
+                severity: 1
             },
             owner: testCollection.owner
         };
@@ -39,7 +42,7 @@ export default new ContainerModule(bind => {
             kind: 'problem',
             uri: new URI('/the/path/to/problem.ts'),
             diagnostic: {
-                message: 'this is also a dangerous problem',
+                message: 'this is just a warning',
                 range: {
                     start: {
                         line: 4,
@@ -49,7 +52,8 @@ export default new ContainerModule(bind => {
                         line: 4,
                         character: 26
                     }
-                }
+                },
+                severity: 2
             },
             owner: testCollection.owner
         };
@@ -57,7 +61,7 @@ export default new ContainerModule(bind => {
             kind: 'problem',
             uri: new URI('/the/path/to/anotherproblem.ts'),
             diagnostic: {
-                message: 'serious! very, very serious!',
+                message: 'this is an information!',
                 range: {
                     start: {
                         line: 13,
@@ -67,14 +71,34 @@ export default new ContainerModule(bind => {
                         line: 23,
                         character: 3
                     }
-                }
+                },
+                severity: 3
+            },
+            owner: testCollection.owner
+        };
+        const testMarker4: ProblemMarker = {
+            kind: 'problem',
+            uri: new URI('/the/path/to/anotherproblem.ts'),
+            diagnostic: {
+                message: 'this is a hint!',
+                range: {
+                    start: {
+                        line: 43,
+                        character: 7
+                    },
+                    end: {
+                        line: 53,
+                        character: 3
+                    }
+                },
+                severity: 4
             },
             owner: testCollection.owner
         };
 
 
         testCollection.setMarkers([
-            testMarker1, testMarker2, testMarker3
+            testMarker1, testMarker2, testMarker3, testMarker4
         ]);
 
         return manager;

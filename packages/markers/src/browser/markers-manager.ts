@@ -15,6 +15,11 @@ export interface Marker {
     owner: string;
 }
 
+export interface MarkerFile {
+    counter: number;
+    uri: URI
+}
+
 export class MarkerCollection implements Disposable {
 
     constructor(
@@ -75,14 +80,20 @@ export class MarkersManager {
         });
     }
 
-    getURIsByKind(kind: string): URI[] {
-        const uris: URI[] = [];
+    getMarkerFilessByKind(kind: string): MarkerFile[] {
+        const markerFiles: MarkerFile[] = [];
         this.forEachByKind(kind, (marker: Marker) => {
-            if (!uris.find(uri => uri.toString() === marker.uri.toString())) {
-                uris.push(marker.uri);
+            const markerFile = markerFiles.find(mf => mf.uri.toString() === marker.uri.toString());
+            if (!markerFile) {
+                markerFiles.push({
+                    uri: marker.uri,
+                    counter: 1
+                });
+            } else {
+                markerFile.counter++;
             }
         });
-        return uris;
+        return markerFiles;
     }
 
     getMarkersByUriAndKind(uri: URI, kind: string): Marker[] {

@@ -10,6 +10,7 @@ import { Tree, ICompositeTreeNode, ITreeNode, ISelectableTreeNode, IExpandableTr
 import { MarkersManager } from './markers-manager';
 import { ProblemMarker } from './problem-marker';
 import { UriSelection } from "@theia/filesystem/lib/common";
+import { Diagnostic } from "vscode-languageserver-types";
 
 @injectable()
 export class MarkersTree extends Tree {
@@ -23,7 +24,7 @@ export class MarkersTree extends Tree {
 
         // TODO must be generalized
         this.markerRoot = {
-            visible: true,
+            visible: false,
             id: 'markerTree',
             name: 'MarkerTree',
             kind: 'problem',
@@ -36,28 +37,29 @@ export class MarkersTree extends Tree {
 
     resolveChildren(parent: ICompositeTreeNode): Promise<ITreeNode[]> {
         if (MarkerRootNode.is(parent)) {
-            return this.getUriNodes((parent as MarkerRootNode));
+            return this.getFileNodes((parent as MarkerRootNode));
         } else if (MarkerFileNode.is(parent)) {
             return this.getMarkerNodes(parent);
         }
         return super.resolveChildren(parent);
     }
 
-    getUriNodes(parent: MarkerRootNode): Promise<MarkerFileNode[]> {
-        const uris = this.markersManager.getURIsByKind(this.markerRoot.kind);
+    getFileNodes(parent: MarkerRootNode): Promise<MarkerFileNode[]> {
+        const markerFiles = this.markersManager.getMarkerFilessByKind(this.markerRoot.kind);
         const uriNodes: MarkerFileNode[] = [];
-        uris.forEach(uri => {
-            const uriNode: MarkerFileNode = {
+        markerFiles.forEach(markerFile => {
+            const markerFileNode: MarkerFileNode = {
                 children: [],
                 expanded: false,
-                uri,
+                uri: markerFile.uri,
                 visible: true,
-                id: 'markerFile-' + uri.displayName,
-                name: uri.displayName,
+                id: 'markerFile-' + markerFile.uri.displayName,
+                name: markerFile.uri.displayName,
                 parent,
-                selected: false
+                selected: false,
+                numberOfMarkers: markerFile.counter
             };
-            uriNodes.push(uriNode);
+            uriNodes.push(markerFileNode);
         });
         return Promise.resolve(uriNodes);
     }
@@ -73,20 +75,30 @@ export class MarkersTree extends Tree {
                 name: marker.diagnostic.message,
                 parent: parent,
                 selected: false,
-                uri: marker.uri
+                uri: marker.uri,
+                diagnostic: marker.diagnostic,
+                owner: marker.owner
             };
             markerNodes.push(markerNode);
-        })
+        });
 
         return Promise.resolve(markerNodes);
     }
 
 }
 
+// TODO must be generalized - diagnostic is problem view related
+export interface MarkerNode extends UriSelection, ISelectableTreeNode {
+    diagnostic: Diagnostic;
+    owner: string;
+}
+export namespace MarkerNode {
+    export function is(node: ITreeNode | undefined): node is MarkerNode {
+        return UriSelection.is(node) && ISelectableTreeNode.is(node) && 'diagnostic' in node;
+    }
+}
 
-export type MarkerNode = UriSelection & ISelectableTreeNode;
-
-export type MarkerFileNode = MarkerNode & IExpandableTreeNode & { parent: MarkerRootNode };
+export type MarkerFileNode = UriSelection & ISelectableTreeNode & IExpandableTreeNode & { parent: MarkerRootNode, numberOfMarkers: number };
 export namespace MarkerFileNode {
     export function is(node: ITreeNode | undefined): node is MarkerFileNode {
         return IExpandableTreeNode.is(node) && UriSelection.is(node);
